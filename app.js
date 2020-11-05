@@ -32,7 +32,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-mongoose.connect('mongodb://localhost:27017/userDB', {
+mongoose.connect('mongodb+srv://admin-antoine:admin123@cluster0.1hdc1.mongodb.net/userDB?retryWrites=true&w=majority', {
     useNewUrlParser: true,
     useUnifiedTopology: true
 });
@@ -71,7 +71,6 @@ passport.use(new GoogleStrategy({
         callbackURL: "http://localhost:3000/auth/google/secrets"
     },
     function (accessToken, refreshToken, profile, cb) {
-        console.log(profile);
         User.findOrCreate({
             googleId: profile.id
         }, function (err, user) {
@@ -133,11 +132,18 @@ app.get("/register", function (req, res) {
 })
 
 app.get("/secrets", function (req, res) {
-    User.find({"secret": {$ne:null}}, function (err, foundUsers) {
-        if(err) {
+    User.find({
+        "secret": {
+            $ne: null
+        }
+    }, function (err, foundUsers) {
+        if (err) {
             console.log(err);
-        } if (foundUsers) {
-            res.render("secrets", {usersWithSecrets: foundUsers});
+        }
+        if (foundUsers) {
+            res.render("secrets", {
+                usersWithSecrets: foundUsers
+            });
         }
     })
 });
@@ -159,12 +165,12 @@ app.post("/submit", function (req, res) {
     const submitedSecret = req.body.secret;
 
     User.findById(req.user.id, function (err, foundUser) {
-        if(err) {
+        if (err) {
             console.log(err);
         } else {
             if (foundUser) {
                 foundUser.secret = submitedSecret;
-                foundUser.save(function() {
+                foundUser.save(function () {
                     res.redirect("/secrets")
                 })
             }
@@ -207,6 +213,8 @@ app.post("/login", function (req, res) {
 
 });
 
-app.listen(3000, function () {
-    console.log("Server started on port 3000");
-});
+let port = process.env.PORT;
+if (port == null || port == "") {
+  port = 3000;
+}
+app.listen(port);
